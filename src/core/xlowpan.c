@@ -171,6 +171,12 @@ static void receive_pkt(void *data, size_t length)
 						return;
 					}
 
+					/* potentially dangerous if not caught */
+					if((packet + payload_len) - (unsigned char*)data > length) {
+						ERROR("receive_pkt: headers + payload_len > length; truncated payload?");
+						payload_len = (length + (unsigned char*)data) - packet;
+					} 
+
 					xlowpan_addrcpy(&pk_info->src, &org_addr);
 					pk_info->len = payload_len;
 
@@ -185,10 +191,8 @@ static void receive_pkt(void *data, size_t length)
 					packet += payload_len;
 
 					/* assert */
-					if(packet - (unsigned char*)data > length) {
-						ERROR("receive_pkt: read data > length");
-					} else if(packet - (unsigned char*)data < length) {
-						ERROR("receive_pkt: read data < length");
+					if(packet - (unsigned char*)data < length) {
+						ERROR("receive_pkt: headers + payload_len < length");
 					}
 
 					/* put at end of list, for further processing by upper layer */
