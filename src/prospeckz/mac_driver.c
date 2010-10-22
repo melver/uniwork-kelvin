@@ -12,14 +12,13 @@
 
 #include "mac_driver.h"
 
-
 void (*xlowpan_receive_pkt)(void *data, size_t length);
 
-/* local variables */
+/*== local variables ==*/
 
 static unsigned char rx_data[MAC_MAX_PAYLOAD];
 
-/* local functions */
+/*== local functions ==*/
 
 static void send_pkt(void *data, size_t length)
 {
@@ -57,7 +56,7 @@ static unsigned char make_session(void)
 	return sess;
 }
 
-/* API */
+/*== API ==*/
 
 struct mac_driver *mac_getdrv(void)
 {

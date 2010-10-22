@@ -1,8 +1,8 @@
-/*
- * hashmap.h
+/**
+ * @file hashmap.h
  *
- * Author: Marco Elver <marco.elver AT gmail.com>
- * Date: Fri Oct  8 19:34:34 BST 2010
+ * @author Marco Elver <marco.elver AT gmail.com>
+ * @date Fri Oct  8 19:34:34 BST 2010
  */
 
 #ifndef HASHMAP_H
@@ -13,11 +13,13 @@
 /* strip it down as much as possible, without loosing too much functionality */
 #define STRIPPED
 
+/* this ERROR macro is used across xlowpan/dynmem as well. TODO: move somewhere else? */
 #ifndef ERROR
-#define ERROR(msg)
+  /* empty by default. redefine to get useful error messages */
+  #define ERROR(msg)
 #endif /* ERROR */
 
-/* data */
+/*== data ==*/
 
 struct ll_node {
 	void *data;
@@ -41,9 +43,9 @@ struct hash_map {
 	hashfn_t hash_fn;
 };
 
-/* functions */
+/*== API ==*/
 
-/* linked list */
+/*= linked list =*/
 struct linked_list *llist_create(void);
 void llist_destroy(struct linked_list* list, void (*destroy_callback)(struct ll_node *node, void *p), void *param);
 struct ll_node *llist_search(struct linked_list *list, struct ll_node *(*callback)(struct ll_node *node, void *p), void *param); /* stop when callback returns not NULL */
@@ -55,7 +57,7 @@ void llist_insertafter(struct linked_list* list, struct ll_node *node, struct ll
 void llist_generic_free_data(struct ll_node *node, void *param);
 #endif
 
-/* hash map */
+/*= hash map =*/
 struct hash_map *hmap_create(size_t num_buckets, hashfn_t hash_fn);
 void hmap_destroy(struct hash_map *map, void (*destroy_callback)(void *data));
 void hmap_set(struct hash_map *map, void *key, void *data);

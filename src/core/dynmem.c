@@ -1,11 +1,11 @@
-/*
- * dynmem.c
+/**
+ * @file dynmem.c
  *
  * This implementation is based on the article found at:
  * http://www.eetimes.com/design/automotive-design/4007638/Memory-allocation-in-C
  *
- * Author: Marco Elver <marco.elver AT gmail.com>
- * Date: Mon Oct 11 21:34:51 BST 2010
+ * @author Marco Elver <marco.elver AT gmail.com>
+ * @date Mon Oct 11 21:34:51 BST 2010
  */
 
 #include "dynmem.h"
@@ -20,7 +20,7 @@ static struct dynmem_info {
 	struct dynmem_header *frhd;
 } dmem;
 
-/*** implementation ***/
+/*== implementation ==*/
 
 void dynmem_init(unsigned char *buffer, size_t size)
 {
@@ -44,7 +44,6 @@ void dynmem_append(unsigned char *buffer, size_t size)
 	dmem.mem_avail += prev->size;
 }
 
-/* @return size in bytes */
 size_t dynmem_avail(void)
 {
 	return dmem.mem_avail * sizeof(struct dynmem_header);
@@ -138,9 +137,6 @@ void dynmem_free(void *ptr)
 	}
 }
 
-/*
- * Optimized memcpy while retaining portability.
- */
 void m_memcpy(void *_dst, void *_src, size_t len)
 {
 	size_t *dst = (size_t*)_dst;

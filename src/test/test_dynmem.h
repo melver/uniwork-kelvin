@@ -6,7 +6,7 @@ static void test_dynmem(void)
 	static unsigned char buf1[256];
 	static unsigned char buf2[256];
 	static unsigned char buf3[256];
-	static unsigned char buf4[256];
+	static unsigned char buf4[256]; /* a 4th block seems only necessary if on 64bit architecture. */
 
 	dynmem_init(buf1, 256);
 	dynmem_append(buf2, 256);

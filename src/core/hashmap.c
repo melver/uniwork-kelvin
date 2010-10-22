@@ -1,8 +1,8 @@
-/*
- * hashmap.c
+/**
+ * @file hashmap.c
  *
- * Author: Marco Elver <marco.elver AT gmail.com>
- * Date: Fri Oct  8 19:34:34 BST 2010
+ * @author Marco Elver <marco.elver AT gmail.com>
+ * @date Fri Oct  8 19:34:34 BST 2010
  */
 
 #include <stdlib.h>
@@ -13,6 +13,8 @@
 #endif
 
 #include "hashmap.h"
+
+/*== linked list implementation ==*/
 
 struct linked_list *llist_create(void)
 {
@@ -158,7 +160,7 @@ void llist_generic_free_data(struct ll_node *node, void *param)
 }
 #endif
 
-/* hash map implementation */
+/*== hash map implementation ==*/
 
 struct keydata_pair {
 	size_t hashed_key;

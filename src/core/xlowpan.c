@@ -1,8 +1,8 @@
-/*
- * xlowpan.c
+/**
+ * @file xlowpan.c
  *
- * Author: Marco Elver <marco.elver AT gmail.com>
- * Date: Thu Oct  7 14:29:04 BST 2010
+ * @author Marco Elver <marco.elver AT gmail.com>
+ * @date Thu Oct  7 14:29:04 BST 2010
  */
 
 #include <stdlib.h>
@@ -16,11 +16,11 @@
 #include "xlowpan.h"
 #include "hashmap.h"
 
-/* internal defines */
+/*== internal defines ==*/
 
 #define HASHMAP_SIZE	10
 
-/* data */
+/*== data ==*/
 
 struct xlowpan_addr64 XLOWPAN_ADDR_BCAST = {
 	{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
@@ -46,8 +46,14 @@ static struct _mdata {
 	struct linked_list *receive_list; /* packet_info */
 } mdata;
 
-/* static functions */
+/*== static functions ==*/
 
+/**
+ * Internal address hashing function.
+ *
+ * @param key Pointer to key
+ * @return The computed hash value
+ */
 static size_t hash_addr64(void *key)
 {
 	struct xlowpan_addr64 *addr = (struct xlowpan_addr64*)key;
@@ -69,6 +75,9 @@ static size_t hash_addr64(void *key)
 	return hash;
 }
 
+/**
+ * Frees the receive buffer. Used for shutdown.
+ */
 static void free_receive_list(struct ll_node *node, void *p)
 {
 	if(node->data) {
@@ -78,6 +87,14 @@ static void free_receive_list(struct ll_node *node, void *p)
 		free(node->data);
 	}
 }
+
+/**
+ * To be called when a raw packet is delivered from the layer above xlowpan (mac layer).
+ * This is the function passed as argument to mac_driver->set_receive_pkt(receive_pkt).
+ *
+ * @param data Raw packet data
+ * @param length Raw packet length
+ */
 
 /*
  * [dsp|org_addr|fin_addr|dsp|len|session|seq|data...]
@@ -221,11 +238,8 @@ static void receive_pkt(void *data, size_t length)
 	}
 }
 
-/*** implementation ***/
+/*== implementation ==*/
 
-/*
- * Call before using xlowpan.
- */
 void xlowpan_init(struct mac_driver *d)
 {
 	/* might be worth checking if d==NULL, but if you don't provide a mac_driver,
@@ -245,9 +259,6 @@ void xlowpan_init(struct mac_driver *d)
 	mdata.receive_list = llist_create();
 }
 
-/*
- * Shutdown xlowpan.
- */
 void xlowpan_shutdown(void)
 {
 	/* free hashmap and all allocated seq_session pairs. */
@@ -272,9 +283,6 @@ void xlowpan_addrcpy(struct xlowpan_addr64 *dst, struct xlowpan_addr64 *src)
 	}
 }
 
-/*
- * @return zero if addr1 and addr2 are the same; -1 if addr1 < addr2, 1 if addr1 > addr2
- */
 int xlowpan_addrcmp(struct xlowpan_addr64 *addr1, struct xlowpan_addr64 *addr2)
 {
 	size_t i = XLOWPAN_ADDR_LEN;

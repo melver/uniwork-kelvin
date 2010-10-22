@@ -1,8 +1,8 @@
-/*
- * xlowpan.h
+/**
+ * @file xlowpan.h
  *
- * Author: Marco Elver <marco.elver AT gmail.com>
- * Date: Thu Oct  7 14:29:04 BST 2010
+ * @author Marco Elver <marco.elver AT gmail.com>
+ * @date Thu Oct  7 14:29:04 BST 2010
  */
 
 #ifndef XLOWPAN_H
@@ -10,7 +10,8 @@
 
 #include <stdlib.h>
 
-/* Definitions */
+/*== Definitions ==*/
+
 #define XLOWPAN_DISPATCH_IPV6 0x41 /* 01000001 =  65 */
 #define XLOWPAN_DISPATCH_MESH 0x80 /* 1000xxxx = 128, for now just fixed 64bit, no 16bit address support */
 #define XLOWPAN_DISPATCH_SLIP 0x77
@@ -26,6 +27,9 @@ struct xlowpan_addr64 {
 
 #define XLOWPAN_ADDR_LEN	8
 
+/**
+ * Variable containing broadcast address. Broadcast is FFFFFFFFFFFFFFFF.
+ */
 extern struct xlowpan_addr64 XLOWPAN_ADDR_BCAST;
 
 #define XLOWPAN_SET_ADDR64(aX, a0, a1, a2, a3, a4, a5, a6, a7) \
@@ -57,8 +61,9 @@ struct xlowpan_header_slip {
 };
 #endif
 
-/* mac driver */
-
+/**
+ * Driver struct, to be passed to xlowpan_init.
+ */
 struct mac_driver {
 	void (*send_pkt)(void *data, size_t length);
 	void (*set_receive_pkt)(void (*receive_pkt)(void *data, size_t length));
@@ -66,14 +71,60 @@ struct mac_driver {
 	unsigned char (*make_session)(void); /* should return a random number */
 };
 
-/* API */
+/*== API ==*/
 
+/**
+ * Initialises xlowpan. Call before using xlowpan.
+ *
+ * @param driver mac_driver instance to be used by xlowpan. 
+ */
 void xlowpan_init(struct mac_driver *driver);
+
+/**
+ * Shutdown xlowpan.
+ */
 void xlowpan_shutdown(void);
+
+/**
+ * Send a packet.
+ *
+ * @param dstaddr Destination address pointer.
+ * @param data Pointer to payload data.
+ * @param length Length of payload.
+ * @return Length of payload sent. Should equal length param, unless final packet len > MAC_MAX_PAYLOAD.
+ */
 size_t xlowpan_send(struct xlowpan_addr64 *dstaddr, void* data, size_t length);
+
+/**
+ * Receives the next packet in the queue.
+ *
+ * @param srcaddr Pointer to address struct to be filled with source address. Can be set to NULL.
+ * @param data Buffer to be filled with packet data.
+ * @param buflen Buffer length; the maximum length to be read.
+ * @return Number of bytes read (copied into data buffer)
+ */
 size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen);
+
+/**
+ * Copies addresses.
+ *
+ * @param dst Destination address pointer.
+ * @param src Source address pointer.
+ */
 void xlowpan_addrcpy(struct xlowpan_addr64 *dst, struct xlowpan_addr64 *src);
+
+/**
+ * Compares addresses.
+ *
+ * @param addr1 xlowpan address.
+ * @param addr2 xlowpan address.
+ * @return 0 if addr1 and addr2 are the same. -1 if addr1 < add2. 1 if addr1 > addr2.
+ */
 int xlowpan_addrcmp(struct xlowpan_addr64 *addr1, struct xlowpan_addr64 *addr2);
+
+/**
+ * @return Address of this host
+ */
 struct xlowpan_addr64 *xlowpan_getaddr(void);
 
 #endif /* XLOWPAN_H */
