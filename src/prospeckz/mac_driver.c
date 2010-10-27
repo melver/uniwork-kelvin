@@ -46,12 +46,17 @@ static unsigned char make_session(void)
 {
 	static unsigned char sess = 0;
 	unsigned char newsess;
-	LOGMSG("called make_session");
 	
 	do {
 		newsess = PRS8_bReadPRS();
 	} while(newsess == sess);
 	sess = newsess;
+	
+	//LOGMSG("called make_session");
+	UART_CPutString("called mac_getdrv: ");
+	UART_CPutString(" sess=");
+	UART_PutSHexInt(sess);
+	UART_CPutString("\r\n");
 	
 	return sess;
 }
@@ -67,6 +72,7 @@ struct mac_driver *mac_getdrv(void)
 	drv.set_receive_pkt = set_receive_pkt;
 	drv.get_addr64 = get_addr64;
 	drv.make_session = make_session;
+	drv.init = mac_initradio;
 	
 	return &drv;
 }
@@ -83,7 +89,7 @@ void mac_initradio(void)
 unsigned char mac_radiohandler(void)
 {
 	/* If FIFOP pin is high there is a complete packet or the buffer has overflowed */
-	if(FIFOP_Data_ADDR & FIFOP_MASK) {
+	if((FIFOP_Data_ADDR & FIFOP_MASK)) {
 		receiveStatus_t rx_stat;
 		
 		LOGMSG("mac_radiohandler: radio interrupt");

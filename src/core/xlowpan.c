@@ -20,6 +20,12 @@
 
 #define HASHMAP_SIZE	10
 
+/* the session number should be random, however to prevent issues
+when hosts reuse session at bootup, have some special seq nums.*/
+#define SEQ_INIT	0 /* special signal to reset the seq to READY */
+#define SEQ_READY	1 /* this is never used by host itself */
+#define SEQ_BEGIN	2 /* this is where the sequence numbers begin */
+
 /*== data ==*/
 
 struct xlowpan_addr64 XLOWPAN_ADDR_BCAST = {
@@ -45,6 +51,8 @@ static struct _mdata {
 	struct hash_map *ss_map; /* mapping: src_addr -> seq_session_pair */
 	struct linked_list *receive_list; /* packet_info */
 } mdata;
+
+static unsigned char mstatus = 0;
 
 /*== static functions ==*/
 
@@ -158,7 +166,9 @@ static void receive_pkt(void *data, size_t length)
 
 				/* check in hash-map if session&seqnum are sane */
 				if((ssp = (struct seq_session_pair*)hmap_get(mdata.ss_map, &org_addr))) {
-					if(ssp->session == session) {
+					if(ssp->session == session &&
+						!(seq == SEQ_INIT && ssp->seq != SEQ_READY) /* seq reset */
+						) {
 						if(seq <= ssp->seq) {
 							/* bouncy packet, discard */
 							return;
@@ -174,13 +184,19 @@ static void receive_pkt(void *data, size_t length)
 
 					hmap_set(mdata.ss_map, &org_addr, ssp);
 				}
+				
+				if(seq == SEQ_INIT) {
+					/* make sure ssp->seq is set to READY,
+					otherwise packet might be consumed twice. */
+					seq = SEQ_READY;
+				}
 
 				/* update org_addr info in hash-map */
 				ssp->session = session;
 				ssp->seq = seq;
 
 				/* append to receive_list */
-				if(consume > RCV_IGNORE) {
+				if(consume > RCV_IGNORE && payload_len) {
 					/* this packet is for us! hurray! */
 					struct packet_info *pk_info = (struct packet_info*)malloc(sizeof(struct packet_info));
 					if(!pk_info) {
@@ -251,16 +267,29 @@ void xlowpan_init(struct mac_driver *d)
 	/* get own address */
 	d->get_addr64(&mdata.my_addr);
 
-	/* initialize sequence number and session */
-	mdata.my_seq = 0;
-	mdata.my_session = d->make_session();
-
 	mdata.ss_map = hmap_create(HASHMAP_SIZE, hash_addr64);
 	mdata.receive_list = llist_create();
+	
+	/* initialize sequence number and session */
+	mdata.my_seq = SEQ_INIT;
+	mdata.my_session = d->make_session();
+	
+	/* bring up mac layer if desired.
+	the advantage would be that xlowpan takes care of session INIT. */
+	if(d->init) {
+		d->init();
+		xlowpan_send(&XLOWPAN_ADDR_BCAST, NULL, 0); /* dummy packet */
+	} else {
+		ERROR("WARNING: Did not initalise mac-layer.");
+	}
+	
+	mstatus = 1;
 }
 
 void xlowpan_shutdown(void)
 {
+	mstatus = 0;
+	
 	/* free hashmap and all allocated seq_session pairs. */
 	hmap_destroy(mdata.ss_map, hmap_generic_free_data);
 	llist_destroy(mdata.receive_list, free_receive_list, NULL);
@@ -332,12 +361,17 @@ size_t xlowpan_send(struct xlowpan_addr64 *dstaddr, void* data, size_t length)
 	*(packet+pos) = (unsigned char)(0xff & length); ++pos;
 	*(packet+pos) = mdata.my_session; ++pos;
 	*(packet+pos) = mdata.my_seq; ++pos;
-	memcpy(packet+pos, data, length); pos += length;
-
-	/* sequence number wrap */
+	if(data && length) {
+		memcpy(packet+pos, data, length); pos += length;
+	}
+	
+	/* next seq */
 	if(mdata.my_seq == 0xff) {
-		mdata.my_seq = 0;
-		mdata.my_session = mdata.driver->make_session(); /* session reset */
+		/* sequence number wrap */
+		xlowpan_resetsession();
+	} else if(mdata.my_seq == SEQ_INIT) {
+		/* this was the init seq packet. skip READY, as only used by receivers. */
+		mdata.my_seq = SEQ_BEGIN;
 	} else {
 		++mdata.my_seq;
 	}
@@ -404,3 +438,14 @@ struct xlowpan_addr64 *xlowpan_getaddr(void)
 	return &mdata.my_addr;
 }
 
+unsigned char xlowpan_getstatus(void)
+{
+	return mstatus;
+}
+
+unsigned char xlowpan_resetsession(void)
+{
+	mdata.my_seq = SEQ_BEGIN; /* Not an INIT. Just start from BEGIN. */
+	mdata.my_session = mdata.driver->make_session(); /* session reset */
+	return mdata.my_session;
+}

@@ -30,6 +30,11 @@ unsigned char make_session(void)
 	return (unsigned char)(rand() % 0xff);
 }
 
+void mac_init(void)
+{
+	puts("called mac_init");
+}
+
 static void test_xlowpan(void)
 {
 	srand(time(NULL));
@@ -41,7 +46,8 @@ static void test_xlowpan(void)
 		send_pkt,
 		set_receive_pkt,
 		get_addr64,
-		make_session
+		make_session,
+		mac_init
 	};
 
 	separate("xlowpan init");
