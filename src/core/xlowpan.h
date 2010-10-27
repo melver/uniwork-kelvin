@@ -69,7 +69,7 @@ struct mac_driver {
 	void (*set_receive_pkt)(void (*receive_pkt)(void *data, size_t length));
 	void (*get_addr64)(struct xlowpan_addr64 *addr); /* return 64bit address; should be HW-id based. */
 	unsigned char (*make_session)(void); /* should return a random number */
-	void (*init)(void); /* initialise hardware. */
+	void (*init)(void); /* initialise hardware. set to NULL to init yourself. */
 };
 
 /*== API ==*/
