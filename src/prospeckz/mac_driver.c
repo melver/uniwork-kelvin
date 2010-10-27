@@ -98,7 +98,8 @@ unsigned char mac_radiohandler(void)
 		if((rx_stat = Radio_receive(rx_data, MAC_MAX_PAYLOAD )).radioStatus == SUCCESS) {
 			LOGMSG("mac_radiohandler: received packet");
 			/* deliver to upper layer (xlowpan) */
-			xlowpan_receive_pkt(rx_data, rx_stat.length);
+			if(xlowpan_getstatus())
+				xlowpan_receive_pkt(rx_data, rx_stat.length);
 		}
 		
 		return 1;
