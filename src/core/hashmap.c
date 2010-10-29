@@ -16,6 +16,15 @@
 
 /*== linked list implementation ==*/
 
+static void _llist_init_content(struct linked_list *list)
+{
+	list->head = NULL;
+	list->tail = NULL;
+#ifndef STRIPPED
+	list->elements = 0;
+#endif
+}
+
 struct linked_list *llist_create(void)
 {
 	struct linked_list *list;
@@ -25,16 +34,12 @@ struct linked_list *llist_create(void)
 		return NULL;
 	}
 
-	list->head = NULL;
-	list->tail = NULL;
-#ifndef STRIPPED
-	list->elements = 0;
-#endif
+	_llist_init_content(list);
 
 	return list;
 }
 
-void llist_destroy(struct linked_list* list, void (*destroy_callback)(struct ll_node *node, void *p), void *param)
+static void _llist_destroy_content(struct linked_list* list, void (*destroy_callback)(struct ll_node *node, void *p), void *param)
 {
 	struct ll_node *current;
 	struct ll_node *next;
@@ -48,6 +53,11 @@ void llist_destroy(struct linked_list* list, void (*destroy_callback)(struct ll_
 		current = next;
 	}
 
+}
+
+void llist_destroy(struct linked_list* list, void (*destroy_callback)(struct ll_node *node, void *p), void *param)
+{
+	_llist_destroy_content(list, destroy_callback, param);
 	free(list);
 }
 
@@ -180,14 +190,14 @@ struct hash_map *hmap_create(size_t num_buckets, hashfn_t hash_fn)
 	map->num_buckets = num_buckets;
 	map->hash_fn = hash_fn;
 
-	if(!(map->buckets = (struct linked_list**)malloc(sizeof(struct linked_list*)*num_buckets))) {
+	if(!(map->buckets_array = (struct linked_list*)malloc(sizeof(struct linked_list)*num_buckets))) {
 		ERROR("hmap_create: out of memory! (2)");
 		free(map);
 		return NULL;
 	}
 
 	for(i=0;i<num_buckets;++i) {
-		map->buckets[i] = llist_create();
+		_llist_init_content(&map->buckets_array[i]);
 	}
 
 	return map;
@@ -212,10 +222,10 @@ void hmap_destroy(struct hash_map *map, void (*destroy_callback)(void *data))
 		return;
 
 	for(i=0;i<map->num_buckets;++i) {
-		llist_destroy(map->buckets[i], _destroy_keydata, (void*)destroy_callback);
+		_llist_destroy_content(&map->buckets_array[i], _destroy_keydata, (void*)destroy_callback);
 	}
 
-	free(map->buckets);
+	free(map->buckets_array);
 	free(map);
 }
 
@@ -233,7 +243,7 @@ static struct ll_node *_find_key(struct ll_node *node, void *param)
 void hmap_set(struct hash_map *map, void *key, void *data)
 {
 	size_t hashed_key = map->hash_fn(key);
-	struct linked_list *list = map->buckets[hashed_key % map->num_buckets];
+	struct linked_list *list = &map->buckets_array[hashed_key % map->num_buckets];
 	struct ll_node *node;
 
 	node = llist_search(list, _find_key, (void*)&hashed_key);
@@ -264,7 +274,7 @@ void hmap_set(struct hash_map *map, void *key, void *data)
 void *hmap_get(struct hash_map *map, void *key)
 {
 	size_t hashed_key = map->hash_fn(key);
-	struct linked_list *list = map->buckets[hashed_key % map->num_buckets];
+	struct linked_list *list = &map->buckets_array[hashed_key % map->num_buckets];
 	struct ll_node *node;
 
 	node = llist_search(list, _find_key, (void*)&hashed_key);

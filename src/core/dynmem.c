@@ -41,7 +41,7 @@ void dynmem_append(unsigned char *buffer, size_t size)
 	prev->ptr->ptr = NULL;
 	prev->ptr->size = size / sizeof(struct dynmem_header);
 
-	dmem.mem_avail += prev->size;
+	dmem.mem_avail += prev->ptr->size;
 }
 
 size_t dynmem_avail(void)

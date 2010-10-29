@@ -1,23 +1,27 @@
 
 #include "../core/dynmem.h"
 
-static void test_dynmem(void)
+#define print_free_mem() printf("[ free mem: %i ]\n", (int)dynmem_avail())
+
+
+static void test_dynmem_init(void)
 {
 	static unsigned char buf1[256];
 	static unsigned char buf2[256];
 	static unsigned char buf3[256];
-	static unsigned char buf4[256]; /* a 4th block seems only necessary if on 64bit architecture. */
 
 	dynmem_init(buf1, 256);
 	dynmem_append(buf2, 256);
 	dynmem_append(buf3, 256);
-	dynmem_append(buf4, 256);
+}
 
-	printf("free mem: %i\n", (int)dynmem_avail());
+static void test_dynmem(void)
+{
+	print_free_mem();
 	char *test1 = dynmem_alloc(64);
-	printf("free mem: %i\n", (int)dynmem_avail());
+	print_free_mem();
 	char *test2 = dynmem_alloc(64);
-	printf("free mem: %i\n", (int)dynmem_avail());
+	print_free_mem();
 
 	strcpy(test1, "11111111");
 	strcpy(test2, "2222222222222");
@@ -26,10 +30,10 @@ static void test_dynmem(void)
 	puts(test2);
 
 	dynmem_free(test1);
-	printf("free mem: %i\n", (int)dynmem_avail());
-
+	print_free_mem();
+	
 	char *test3 = dynmem_alloc(100);
-	printf("free mem: %i\n", (int)dynmem_avail());
+	print_free_mem();
 
 	strcpy(test3, "333");
 	puts(test2);
@@ -43,5 +47,15 @@ static void test_dynmem(void)
 		dynmem_free(test1);
 	}
 
-	printf("free mem: %i\n", (int)dynmem_avail());
+	test1 = dynmem_alloc(60);
+	test2 = dynmem_alloc(60);
+	test3 = dynmem_alloc(60);
+	dynmem_free(test2);
+	test2 = dynmem_alloc(72);
+	dynmem_free(dynmem_alloc(130));
+	dynmem_free(test3);
+	dynmem_free(test1);
+	dynmem_free(test2);
+
+	print_free_mem();
 }

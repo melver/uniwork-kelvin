@@ -1,7 +1,7 @@
 
 #include "../core/hashmap.h"
 
-#define HASH_BUCKETS 16
+#define HASH_BUCKETS 10
 
 static struct ll_node *print_node(struct ll_node *node, void *param)
 {
@@ -39,6 +39,7 @@ static void test_hashmap(void)
 	struct linked_list *list;
 	struct ll_node *node;
 
+	print_free_mem();
 	list = llist_create();
 
 	node = llist_append(list);
@@ -67,10 +68,13 @@ static void test_hashmap(void)
 
 	struct hash_map *map;
 
+	print_free_mem();
 	map = hmap_create(HASH_BUCKETS, simple_hash);
+	print_free_mem();
 	hmap_set(map, "1", "hi there");
 	hmap_set(map, "Y", "bar");
 	hmap_set(map, "foo", "baz");
+	print_free_mem();
 #define puts(msg) puts((msg ? msg : "memerr"))
 	puts((const char*)hmap_get(map, "1"));
 	puts((const char*)hmap_get(map, "Y"));

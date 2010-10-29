@@ -15,14 +15,20 @@ static void section(const char* section)
 	printf("\n====== %s =======\n\n", section);
 }
 
+#include "test_dynmem.h"
 #include "test_hashmap.h"
 #include "test_xlowpan.h"
-#include "test_dynmem.h"
 
 int main(int argc, char* argv[])
 {
+	int i;
+
 	section("dynmem");
-	test_dynmem();
+	test_dynmem_init();
+	for(i=0; i<3; ++i) {
+		separate(NULL);
+		test_dynmem();
+	}
 
 	section("hashmap");
 	test_hashmap();

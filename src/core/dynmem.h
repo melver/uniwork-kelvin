@@ -16,6 +16,9 @@
 
 /**
  * Initialize the memory manager with an initial block of memory to be managed.
+ *
+ * Please note that the maximum amount of memory that can be allocated by dynmem_alloc
+ * at once, is the size of the largest block of memory added (less header overhead).
  * 
  * @param buffer Pointer to block of memory
  * @param size Length of block of memory pointed to by buffer

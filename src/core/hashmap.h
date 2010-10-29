@@ -38,7 +38,7 @@ struct linked_list {
 typedef size_t (*hashfn_t)(void *key);
 
 struct hash_map {
-	struct linked_list **buckets; /* array of pointers to linked_lists */
+	struct linked_list *buckets_array; /* array of linked_lists */
 	size_t num_buckets;
 	hashfn_t hash_fn;
 };
