@@ -53,7 +53,7 @@ static unsigned char make_session(void)
 	sess = newsess;
 	
 	//LOGMSG("called make_session");
-	UART_CPutString("called mac_getdrv: ");
+	UART_CPutString("called make_session: ");
 	UART_CPutString(" sess=");
 	UART_PutSHexInt(sess);
 	UART_CPutString("\r\n");
