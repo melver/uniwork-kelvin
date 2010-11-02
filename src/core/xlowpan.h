@@ -27,6 +27,14 @@ struct xlowpan_addr64 {
 
 #define XLOWPAN_ADDR_LEN	8
 
+/* Address types. */
+enum xlowpan_addr_type {
+	XLOWPAN_ADDR_TYPE_NULL,
+	XLOWPAN_ADDR_TYPE_IGNORE,
+	XLOWPAN_ADDR_TYPE_BCAST,
+	XLOWPAN_ADDR_TYPE_SELF
+};
+
 /**
  * Variable containing broadcast address. Broadcast is FFFFFFFFFFFFFFFF.
  */
@@ -105,6 +113,17 @@ size_t xlowpan_send(struct xlowpan_addr64 *dstaddr, void* data, size_t length);
  * @return Number of bytes read (copied into data buffer)
  */
 size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen);
+
+/**
+ * Receives the next packet in the queue.
+ *
+ * @param srcaddr Pointer to address struct to be filled with source address. Can be set to NULL.
+ * @param dst_type Pointer to xlowpan_addr_type to be filled with dst type address. Can be set to NULL.
+ * @param data Buffer to be filled with packet data.
+ * @param buflen Buffer length; the maximum length to be read.
+ * @return Number of bytes read (copied into data buffer)
+ */
+size_t xlowpan_recv4(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst_type, void *data, size_t buflen);
 
 /**
  * Copies addresses.

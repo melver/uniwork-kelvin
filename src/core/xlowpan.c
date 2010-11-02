@@ -39,6 +39,7 @@ struct seq_session_pair {
 
 struct packet_info {
 	struct xlowpan_addr64 src;
+	enum xlowpan_addr_type dst_type;
 	size_t len;
 	void *data;
 };
@@ -107,17 +108,13 @@ static void free_receive_list(struct ll_node *node, void *p)
 /*
  * [dsp|org_addr|fin_addr|dsp|len|session|seq|data...]
  */
-#define RCV_DONTKNOW	-1
-#define RCV_IGNORE		 0
-#define RCV_BROADCAST	 1
-#define RCV_RECEIVE		 2
 static void receive_pkt(void *data, size_t length)
 {
 	unsigned char forward_hops = 0;
 	unsigned char *packet = (unsigned char *)data;
 	struct xlowpan_addr64 org_addr;
 	struct xlowpan_addr64 fin_addr;
-	char consume = RCV_DONTKNOW;
+	enum xlowpan_addr_type dst_type = XLOWPAN_ADDR_TYPE_NULL;
 
 	if(!length)
 		return;
@@ -134,17 +131,17 @@ static void receive_pkt(void *data, size_t length)
 
 		/* fin_addr != my_addr && packet expired */
 		if(!xlowpan_addrcmp(&fin_addr, &mdata.my_addr)) {
-			consume = RCV_RECEIVE;
+			dst_type = XLOWPAN_ADDR_TYPE_SELF;
 		} else if(!xlowpan_addrcmp(&fin_addr, &XLOWPAN_ADDR_BCAST)) {
-			consume = RCV_BROADCAST;
+			dst_type = XLOWPAN_ADDR_TYPE_BCAST;
 		} else {
-			consume = RCV_IGNORE;
+			dst_type = XLOWPAN_ADDR_TYPE_IGNORE;
 		}
 
 		if(!xlowpan_addrcmp(&org_addr, &mdata.my_addr))
 			forward_hops = 0; /* this node sent the packet, don't send twice! */
 
-		if(consume == RCV_IGNORE && !forward_hops) {
+		if(dst_type == XLOWPAN_ADDR_TYPE_IGNORE && !forward_hops) {
 			/* discard */
 			return;
 		}
@@ -196,7 +193,8 @@ static void receive_pkt(void *data, size_t length)
 				ssp->seq = seq;
 
 				/* append to receive_list */
-				if(consume > RCV_IGNORE && payload_len) {
+				if((dst_type == XLOWPAN_ADDR_TYPE_BCAST || dst_type == XLOWPAN_ADDR_TYPE_SELF)
+						&& payload_len) {
 					/* this packet is for us! hurray! */
 					struct packet_info *pk_info = (struct packet_info*)malloc(sizeof(struct packet_info));
 					if(!pk_info) {
@@ -211,6 +209,7 @@ static void receive_pkt(void *data, size_t length)
 					} 
 
 					xlowpan_addrcpy(&pk_info->src, &org_addr);
+					pk_info->dst_type = dst_type;
 					pk_info->len = payload_len;
 
 					pk_info->data = (void*)malloc(payload_len);
@@ -239,7 +238,7 @@ static void receive_pkt(void *data, size_t length)
 						}
 					}
 
-					if(consume == RCV_RECEIVE)
+					if(dst_type == XLOWPAN_ADDR_TYPE_SELF)
 						break; /* don't forward */
 				}
 
@@ -389,12 +388,7 @@ size_t xlowpan_send(struct xlowpan_addr64 *dstaddr, void* data, size_t length)
 	return length;
 }
 
-/* 
- * @param src will contain the source address.
- * @param data buffer to hold data.
- * @param buflen maximum length of buffer. shouldn't be longer than MAC_MAX_PAYLOAD.
- * @return number of bytes written into data. */
-size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen)
+size_t xlowpan_recv4(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst_type, void *data, size_t buflen)
 {
 	struct packet_info *pk_info;
 	struct ll_node *node;
@@ -417,6 +411,10 @@ size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen)
 		xlowpan_addrcpy(srcaddr, &pk_info->src);
 	}
 
+	if(dst_type) {
+		*dst_type = pk_info->dst_type;
+	}
+
 	if(data) {
 		/* copy data to upper layer */
 		memcpy(data, pk_info->data, to_read);
@@ -431,6 +429,11 @@ size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen)
 	}
 
 	return to_read;
+}
+
+size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen)
+{
+	return xlowpan_recv4(srcaddr, NULL, data, buflen);
 }
 
 struct xlowpan_addr64 *xlowpan_getaddr(void)

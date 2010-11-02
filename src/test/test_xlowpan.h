@@ -54,6 +54,7 @@ static void test_xlowpan(void)
 	xlowpan_init(&driver);
 
 	const char *some_data = "my name is dilbert. :)";
+	enum xlowpan_addr_type dst_type;
 
 	/* only 1 send */
 	xlowpan_send(xlowpan_getaddr(), (void*)some_data, strlen(some_data)+1);
@@ -69,8 +70,11 @@ static void test_xlowpan(void)
 	xlowpan_send(&XLOWPAN_ADDR_BCAST, (void*)some_data, strlen(some_data)+1);
 
 	char buf[MAC_MAX_PAYLOAD];
-	while(xlowpan_recv(NULL, buf, MAC_MAX_PAYLOAD)) {
-		puts(buf);
+	while(xlowpan_recv4(NULL, &dst_type, buf, MAC_MAX_PAYLOAD)) {
+		printf("dst_type=%s, buf=%s\n", (dst_type == XLOWPAN_ADDR_TYPE_NULL ? "NULL" :
+										 dst_type == XLOWPAN_ADDR_TYPE_IGNORE ? "IGNORE" :
+										 dst_type == XLOWPAN_ADDR_TYPE_BCAST ? "BCAST" :
+										 dst_type == XLOWPAN_ADDR_TYPE_SELF ? "SELF" : "UNKNOWN") , buf);
 	}
 
 	xlowpan_shutdown();
