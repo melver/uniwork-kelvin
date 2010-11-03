@@ -40,8 +40,7 @@
 #define BASE64_CALC_DECODED_SIZE(___strlen) ((((___strlen)-2)*3)/4)
 
 /**
- * Base64 encode and return size data in 'src'. The caller must free the
- * returned string.
+ * Base64 encode and return size data in 'src'.
  * @param dst buffer to be used to store result.
  * @param src The data to be base64 encode
  * @param size The size of the data in src
@@ -53,10 +52,11 @@ char *base64_encode(char *dst, unsigned char *src, size_t size);
  * Decode the base64 encoded string 'src' into the memory pointed to by
  * 'dest'.
  * @param dest Pointer to memory for holding the decoded string.
- * Must be large enough to recieve the decoded string.
+ * Must be large enough to recieve the decoded string. Use BASE64_CALC_DECODED_SIZE.
  * @param src A base64 encoded string.
- * @return the length of the decoded string. Length 0 if failed.
+ * @param dst_maxlen The maximum length that dest can hold.
+ * @return the length of the decoded byte array in dest. Length 0 if failed.
  */
-size_t base64_decode(unsigned char *dest, char *src);
+size_t base64_decode(unsigned char *dest, char *src, size_t dst_maxlen);
 
 #endif

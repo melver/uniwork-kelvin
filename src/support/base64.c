@@ -96,7 +96,7 @@ char *base64_encode(char *dst, unsigned char *src, size_t size)
 }
 
 
-size_t base64_decode(unsigned char *dest, char *src)
+size_t base64_decode(unsigned char *dest, char *src, size_t dst_maxlen)
 {
 	if(src && *src) {
 
@@ -133,22 +133,27 @@ size_t base64_decode(unsigned char *dest, char *src)
 			b3= decode(c3);
 			b4= decode(c4);
 
+			if(!dst_maxlen)
+				break;
 			*p++=((b1<<2)|(b2>>4) );
+			--dst_maxlen;
 
 			if(c3 != '=') {
+				if(!dst_maxlen)
+					break;
 				*p++=(((b2&0xf)<<4)|(b3>>2) );
+				--dst_maxlen;
 			}
 
 			if(c4 != '=') {
-
+				if(!dst_maxlen)
+					break;
 				*p++=(((b3&0x3)<<6)|b4 );
-
+				--dst_maxlen;
 			}
-
 		}
 
 		return (p-dest);
-
 	}
 
 	return 0;

@@ -16,7 +16,7 @@ void test_base64(void)
 
     printf("Encoded: %s\n", str1);
 
-    size_t len = base64_decode((unsigned char*)str2, str1);
+    size_t len = base64_decode((unsigned char*)str2, str1, MSG_SIZE);
 
     printf("Decoded: %s size=%i %i\n", str2, (int)strlen(str2), (int)len);
 }
