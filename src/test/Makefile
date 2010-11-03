@@ -1,7 +1,7 @@
 
 CC=gcc -g -Wall -D_M8C
 NAME=test
-OBJECTS=../core/xlowpan.o ../core/hashmap.o ../core/dynmem.o
+OBJECTS=../core/xlowpan.o ../core/hashmap.o ../core/dynmem.o ../support/base64.o
 
 .PHONY: all
 all: $(NAME)

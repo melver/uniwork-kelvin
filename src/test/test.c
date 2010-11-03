@@ -15,6 +15,7 @@ static void section(const char* section)
 	printf("\n====== %s =======\n\n", section);
 }
 
+#include "test_base64.h"
 #include "test_dynmem.h"
 #include "test_hashmap.h"
 #include "test_xlowpan.h"
@@ -22,6 +23,9 @@ static void section(const char* section)
 int main(int argc, char* argv[])
 {
 	int i;
+
+	section("base64");
+	test_base64();
 
 	section("dynmem");
 	test_dynmem_init();
