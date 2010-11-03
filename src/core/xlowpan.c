@@ -18,7 +18,8 @@
 
 /*== internal defines ==*/
 
-#define HASHMAP_SIZE	10
+#define HASHMAP_SIZE		10
+#define MAX_FORWARD_HOPS	0x0f
 
 /* the session number should be random, however to prevent issues
 when hosts reuse session at bootup, have some special seq nums.*/
@@ -39,7 +40,7 @@ struct seq_session_pair {
 
 struct packet_info {
 	struct xlowpan_addr64 src;
-	enum xlowpan_addr_type dst_type;
+	unsigned char attrs; /* [ hops_travelled:4bits | dst_type:4bits ] */
 	size_t len;
 	void *data;
 };
@@ -111,6 +112,7 @@ static void free_receive_list(struct ll_node *node, void *p)
 static void receive_pkt(void *data, size_t length)
 {
 	unsigned char forward_hops = 0;
+	unsigned char hops_travelled;
 	unsigned char *packet = (unsigned char *)data;
 	struct xlowpan_addr64 org_addr;
 	struct xlowpan_addr64 fin_addr;
@@ -122,6 +124,7 @@ static void receive_pkt(void *data, size_t length)
 	/* first round */
 	if((*packet & XLOWPAN_DISPATCH_MESH) == XLOWPAN_DISPATCH_MESH) {
 		forward_hops = (*packet & 0x0f) - 1;
+		hops_travelled = MAX_FORWARD_HOPS - forward_hops;
 		*packet = XLOWPAN_DISPATCH_MESH | forward_hops;
 		++packet; /* done with dispatch */
 
@@ -138,8 +141,10 @@ static void receive_pkt(void *data, size_t length)
 			dst_type = XLOWPAN_ADDR_TYPE_IGNORE;
 		}
 
-		if(!xlowpan_addrcmp(&org_addr, &mdata.my_addr))
-			forward_hops = 0; /* this node sent the packet, don't send twice! */
+		if(!xlowpan_addrcmp(&org_addr, &mdata.my_addr)) {
+		   	/* this node sent the packet, don't send twice! */
+			forward_hops = 0;
+		}
 
 		if(dst_type == XLOWPAN_ADDR_TYPE_IGNORE && !forward_hops) {
 			/* discard */
@@ -209,7 +214,7 @@ static void receive_pkt(void *data, size_t length)
 					} 
 
 					xlowpan_addrcpy(&pk_info->src, &org_addr);
-					pk_info->dst_type = dst_type;
+					pk_info->attrs = (dst_type & 0x0f) | ((hops_travelled) << 4);
 					pk_info->len = payload_len;
 
 					pk_info->data = (void*)malloc(payload_len);
@@ -351,7 +356,7 @@ size_t xlowpan_send(struct xlowpan_addr64 *dstaddr, void* data, size_t length)
 	/* build the packet */
 
 	/* mesh part */
-	*packet = XLOWPAN_DISPATCH_MESH | 0x0f; ++pos;
+	*packet = XLOWPAN_DISPATCH_MESH | MAX_FORWARD_HOPS; ++pos;
 	memcpy(packet+pos, mdata.my_addr.addr, XLOWPAN_ADDR_LEN); pos += XLOWPAN_ADDR_LEN;
 	memcpy(packet+pos, dstaddr->addr, XLOWPAN_ADDR_LEN); pos+= XLOWPAN_ADDR_LEN;
 
@@ -388,7 +393,8 @@ size_t xlowpan_send(struct xlowpan_addr64 *dstaddr, void* data, size_t length)
 	return length;
 }
 
-size_t xlowpan_recv4(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst_type, void *data, size_t buflen)
+size_t xlowpan_recv5(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst_type,
+		unsigned char *hops_travelled, void *data, size_t buflen)
 {
 	struct packet_info *pk_info;
 	struct ll_node *node;
@@ -412,7 +418,11 @@ size_t xlowpan_recv4(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst
 	}
 
 	if(dst_type) {
-		*dst_type = pk_info->dst_type;
+		*dst_type = (pk_info->attrs & 0x0f);
+	}
+
+	if(hops_travelled) {
+		*hops_travelled = ((pk_info->attrs & 0xf0) >> 4);
 	}
 
 	if(data) {
@@ -433,7 +443,7 @@ size_t xlowpan_recv4(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst
 
 size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen)
 {
-	return xlowpan_recv4(srcaddr, NULL, data, buflen);
+	return xlowpan_recv5(srcaddr, NULL, NULL, data, buflen);
 }
 
 struct xlowpan_addr64 *xlowpan_getaddr(void)

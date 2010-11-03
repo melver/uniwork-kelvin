@@ -119,11 +119,13 @@ size_t xlowpan_recv(struct xlowpan_addr64 *srcaddr, void *data, size_t buflen);
  *
  * @param srcaddr Pointer to address struct to be filled with source address. Can be set to NULL.
  * @param dst_type Pointer to xlowpan_addr_type to be filled with dst type address. Can be set to NULL.
+ * @param hops_travelled Pointer to byte to be filled with the hops this packet has travelled. Can be set to NULL.
  * @param data Buffer to be filled with packet data.
  * @param buflen Buffer length; the maximum length to be read.
  * @return Number of bytes read (copied into data buffer)
  */
-size_t xlowpan_recv4(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst_type, void *data, size_t buflen);
+size_t xlowpan_recv5(struct xlowpan_addr64 *srcaddr, enum xlowpan_addr_type *dst_type,
+		unsigned char *hops_travelled, void *data, size_t buflen);
 
 /**
  * Copies addresses.
