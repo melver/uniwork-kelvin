@@ -1,8 +1,8 @@
 
 #include "../support/base64.h"
 
-#define MSG "Hello!12345612356"
-#define MSG_SIZE 19 // with \0
+#define MSG "Hello!12345612356..:-)"
+#define MSG_SIZE 23 // with \0
 
 void test_base64(void)
 {
@@ -14,7 +14,7 @@ void test_base64(void)
 
     size_t len_enc = base64_encode(str1, (unsigned char*)MSG, MSG_SIZE);
 
-    printf("Encoded: %s len_enc=%i macro_encoded_size=%i\n", str1, (int)len_enc, BASE64_CALC_ENCODED_SIZE(MSG_SIZE));
+    printf("Encoded: %s strlen=%i len_enc=%i macro_encoded_size=%i\n", str1, (int)strlen(str1), (int)len_enc, BASE64_CALC_ENCODED_SIZE(MSG_SIZE));
 
     size_t len_dec = base64_decode((unsigned char*)str2, str1, MSG_SIZE);
 

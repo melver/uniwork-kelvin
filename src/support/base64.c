@@ -43,23 +43,20 @@ static unsigned char decode(char c);
 
 /* ------------------------------------------------------------------ Public */
 
-size_t base64_encode(char *dst, unsigned char *src, size_t size)
+size_t base64_encode_callback(unsigned char *src, size_t size, void (*callback)(char c, void *param), void* param)
 {
 	size_t i;
-	char *p;
-	unsigned char b1, b2, b3, b4, b5, b6, b7;
+	size_t len_enc = 0;
+	unsigned char b1, b2, b3;
 
-	if(!src)
+	if(!src || !callback)
 		return 0;
-
-	p= dst;
 
 	for(i=0; i<size; i+=3) {
 
-		b1=0; b2=0;
-		b3=0; b4=0;
-		b5=0; b6=0;
-		b7=0;
+		b1=0;
+		b2=0;
+		b3=0;
 
 		b1 = src[i];
 
@@ -69,30 +66,42 @@ size_t base64_encode(char *dst, unsigned char *src, size_t size)
 		if(i+2<size)
 			b3 = src[i+2];
 
-		b4= b1>>2;
-		b5= ((b1&0x3)<<4)|(b2>>4);
-		b6= ((b2&0xf)<<2)|(b3>>6);
-		b7= b3&0x3f;
-
-		*p++= encode(b4);
-		*p++= encode(b5);
+		callback(encode(b1>>2), param);
+		callback(encode(((b1&0x3)<<4)|(b2>>4)), param);
 
 		if(i+1<size) {
-			*p++= encode(b6);
+			callback(encode(((b2&0xf)<<2)|(b3>>6)), param);
 		} else {
-			*p++= '=';
+			callback('=', param);
 		}
 
 		if(i+2<size) {
-			*p++= encode(b7);
+			callback(encode(b3&0x3f), param);
 		} else {
-			*p++= '=';
+			callback('=', param);
 		}
 
+		len_enc += 4;
 	}
 
-	*p = '\0';
-	return (p-dst);
+	return len_enc;
+
+}
+
+static void append_callback_(char c, void *param)
+{
+	char **p = (char**)param;
+	*((*p)++) = c;
+}
+
+size_t base64_encode(char *dst, unsigned char *src, size_t size)
+{
+	size_t result;
+
+	result = base64_encode_callback(src, size, append_callback_, (void*)(&dst));
+
+	*dst = '\0';
+	return result;
 }
 
 

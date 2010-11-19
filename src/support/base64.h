@@ -37,7 +37,7 @@
 /**
  * Calculates the size of a buffer after decoding a string of length ___strlen.
  */
-#define BASE64_CALC_DECODED_SIZE(___strlen) ((((___strlen)-2)*3)/4)
+#define BASE64_CALC_DECODED_SIZE(___strlen) ((((___strlen))*3)/4)
 
 /**
  * Base64 encode and return size data in 'src'.
@@ -47,6 +47,7 @@
  * @return length of encoded string (without trailing \0). Length 0 if failed.
  */
 size_t base64_encode(char *dst, unsigned char *src, size_t size);
+size_t base64_encode_callback(unsigned char *src, size_t size, void (*callback)(char c, void *param), void* param);
 
 /**
  * Decode the base64 encoded string 'src' into the memory pointed to by
