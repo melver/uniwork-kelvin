@@ -28,11 +28,11 @@
 #include <stdlib.h>
 
 /**
- * Calculates the size of a string after encoding a packet of size _buflen.
+ * Calculates the length of a string after encoding a packet of size _buflen.
  * With a proper C compiler this can be used in array declarations,
- * when using fixed length packets.
+ * when using fixed length packets. Does NOT account for terminating \0.
  */
-#define BASE64_CALC_ENCODED_SIZE(_buflen) ((((_buflen)*4)/3)+4)
+#define BASE64_CALC_ENCODED_SIZE(_buflen) ((((_buflen)*4)/3)+3)
 
 /**
  * Calculates the size of a buffer after decoding a string of length ___strlen.
@@ -44,9 +44,9 @@
  * @param dst buffer to be used to store result.
  * @param src The data to be base64 encode
  * @param size The size of the data in src
- * @return encoded string otherwise NULL. Points to dst if successful.
+ * @return length of encoded string (without trailing \0). Length 0 if failed.
  */
-char *base64_encode(char *dst, unsigned char *src, size_t size);
+size_t base64_encode(char *dst, unsigned char *src, size_t size);
 
 /**
  * Decode the base64 encoded string 'src' into the memory pointed to by

@@ -43,14 +43,14 @@ static unsigned char decode(char c);
 
 /* ------------------------------------------------------------------ Public */
 
-char *base64_encode(char *dst, unsigned char *src, size_t size)
+size_t base64_encode(char *dst, unsigned char *src, size_t size)
 {
 	size_t i;
 	char *p;
 	unsigned char b1, b2, b3, b4, b5, b6, b7;
 
 	if(!src)
-		return NULL;
+		return 0;
 
 	p= dst;
 
@@ -92,7 +92,7 @@ char *base64_encode(char *dst, unsigned char *src, size_t size)
 	}
 
 	*p = '\0';
-	return dst;
+	return (p-dst);
 }
 
 
