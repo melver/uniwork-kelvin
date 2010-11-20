@@ -10,7 +10,7 @@
 #ifndef DYNMEM_H
 #define DYNMEM_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /*== API ==*/
 

@@ -1,3 +1,9 @@
+
+/* include up here to test bare includes */
+#include "../core/dynmem.h"
+#include "../core/hashmap.h"
+#include "../core/xlowpan.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

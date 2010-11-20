@@ -8,7 +8,7 @@
 #ifndef XLOWPAN_H
 #define XLOWPAN_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /*== Definitions ==*/
 

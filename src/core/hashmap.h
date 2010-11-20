@@ -8,7 +8,7 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /* strip it down as much as possible, without loosing too much functionality */
 #define STRIPPED
