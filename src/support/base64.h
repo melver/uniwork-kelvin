@@ -25,7 +25,7 @@
 #ifndef BASE64_H
 #define BASE64_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /**
  * Calculates the length of a string after encoding a packet of size _buflen.

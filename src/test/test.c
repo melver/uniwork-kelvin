@@ -3,6 +3,7 @@
 #include "../core/dynmem.h"
 #include "../core/hashmap.h"
 #include "../core/xlowpan.h"
+#include "../support/base64.h"
 
 #include <stdlib.h>
 #include <stdio.h>
