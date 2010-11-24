@@ -10,9 +10,9 @@ static void test_dynmem_init(void)
 	static unsigned char buf2[256];
 	static unsigned char buf3[256];
 
-	dynmem_init(buf1, 256);
-	dynmem_append(buf2, 256);
+	dynmem_init(buf2, 256);
 	dynmem_append(buf3, 256);
+	dynmem_append(buf1, 256);
 }
 
 static void test_dynmem(void)

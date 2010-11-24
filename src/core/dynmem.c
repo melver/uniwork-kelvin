@@ -33,15 +33,26 @@ void dynmem_init(unsigned char *buffer, size_t size)
 
 void dynmem_append(unsigned char *buffer, size_t size)
 {
-	struct dynmem_header *next, *prev;
+	struct dynmem_header *next, *prev, *newblock;
+	
+	/* after setup, the linked list is expected to be ordered in ascending memory address order */
 
-	for(prev=NULL, next=dmem.frhd; next; prev=next, next=next->ptr) {}
+	for(	prev=NULL, next=dmem.frhd;
+			next && ((struct dynmem_header*)buffer) > next;
+			prev=next, next=next->ptr) {}
+	
+	newblock = (struct dynmem_header*)buffer;
+	newblock->ptr = next;
+	newblock->size = size / sizeof(struct dynmem_header);
 
-	prev->ptr = (struct dynmem_header*)buffer;
-	prev->ptr->ptr = NULL;
-	prev->ptr->size = size / sizeof(struct dynmem_header);
+	if(prev) {
+		prev->ptr = newblock;
+	} else {
+		/* only other possibility */
+		dmem.frhd = newblock;
+	}
 
-	dmem.mem_avail += prev->ptr->size;
+	dmem.mem_avail += newblock->size;
 }
 
 size_t dynmem_avail(void)
