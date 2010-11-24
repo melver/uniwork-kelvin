@@ -142,6 +142,9 @@ void m_memcpy(void *_dst, void *_src, size_t len)
 	size_t *dst = (size_t*)_dst;
 	size_t *src = (size_t*)_src;
 	size_t remainder = len % sizeof(size_t);
+
+	if(dst == src)
+		return;
 	
 	if(remainder) {
 		len -= remainder;
